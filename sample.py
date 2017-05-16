@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from torch.autograd import Variable
 
-from utils import new_hidden, get_sampling_function, to_text
+from utils import new_hidden, get_sampling_function, to_text, maybe_cuda_var
 
 
 def sample_model(config, dataset, model,
@@ -22,8 +22,10 @@ def sample_model(config, dataset, model,
     for i in range(length):
         # Only use the last runner.seq_length for prediction input
         pred_input = history[:, -config.seq_length:]
+        pred_input_var = maybe_cuda_var(
+            torch.LongTensor(pred_input), cuda=config.cuda)
         output_gen, hidden_gen = model(
-            Variable(torch.LongTensor(pred_input)).cuda(),
+            pred_input_var,
             hidden_gen,
         )
 

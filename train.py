@@ -1,16 +1,19 @@
-import numpy as np
+from __future__ import print_function
+import os
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.utils
 
 from model import CharRNNModel
 from data import load_data
-from utils import new_hidden, repackage_sample
+from utils import new_hidden, maybe_cuda_var, set_seed
 from sample import sample_model
 
 
-def train_model(config,
+def train_model(config, verbose=True, seed=1,
                 sample_prime_text="The ", sample_length=50):
+
+    set_seed(config, seed=seed)
     dataset, dataloader = load_data(config)
 
     model = CharRNNModel(config)
@@ -27,14 +30,14 @@ def train_model(config,
 
     # Training Loop
     model.train()
-    print "START TRAINING for {} Epochs".format(config.num_epochs)
+    print("START TRAINING for {} Epochs".format(config.num_epochs))
     for epoch in range(config.num_epochs):
         batch_loss = 0
         for x_batch, y_batch in dataloader:
 
             # Pre-process inputs
-            x_var = repackage_sample(x_batch, config=config)
-            y_var = repackage_sample(y_batch, config=config)
+            x_var = maybe_cuda_var(x_batch, cuda=config.cuda)
+            y_var = maybe_cuda_var(y_batch, cuda=config.cuda)
 
             # Run, perform gradient-descent
             model.zero_grad()
@@ -56,23 +59,39 @@ def train_model(config,
         losses.append(batch_loss)
 
         # Print status
-        print "Epoch={}/{}: Loss={}".format(
+        maybe_print("Epoch={}/{}: Loss={}".format(
             epoch, config.num_epochs, batch_loss,
-        )
-        print "Sample: "
-        print indent_text(sample_model(
-            config=config,
-            dataset=dataset,
-            model=model,
-            prime_text=sample_prime_text,
-            length=sample_length,
-        ))
+        ), verbose=verbose)
+
+        if verbose:
+            print("Sample: ")
+            print(indent_text(sample_model(
+                config=config,
+                dataset=dataset,
+                model=model,
+                prime_text=sample_prime_text,
+                length=sample_length,
+            )))
+
+        if config.save_every and epoch % config.save_every == 0:
+            save_path = os.path.join(
+                config.save_dir,
+                "{:04d}.ckpt".format(epoch)
+            ),
+            maybe_print("Saving to ".format(save_path), verbose=verbose)
+            torch.save(model, save_path)
 
         # Decay Learning Rate
         for param_group in optimizer.param_groups:
             param_group['lr'] *= config.decay_rate
 
+    print("DONE TRAINING for {} Epochs".format(config.num_epochs))
     return dataset, model, losses
+
+
+def maybe_print(text, verbose):
+    if verbose:
+        print(text)
 
 
 def indent_text(text, indentation=8):

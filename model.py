@@ -1,6 +1,5 @@
 import torch.nn as nn
 from torch.autograd import Variable
-import torch.nn.functional as F
 
 
 class CharRNNModel(nn.Module):
@@ -10,16 +9,25 @@ class CharRNNModel(nn.Module):
         # Parameters
         self.num_layers = config.num_layers
         self.rnn_size = config.rnn_size
+        self.rnn_model = config.rnn_model
 
         # Layers (containing weights)
         self.embedding = nn.Embedding(
             config.vocab_size, self.rnn_size,
         )
-        self.rnn = nn.LSTM(
+
+        if self.rnn_model == "LSTM":
+            rnn_cell = nn.LSTM
+        elif self.rnn_model == "GRU":
+            rnn_cell = nn.GRU
+        else:
+            raise KeyError()
+
+        self.rnn = rnn_cell(
             self.rnn_size,
             self.rnn_size,
             self.num_layers,
-            dropout=(1-config.input_keep_prob),
+            dropout=(1 - config.keep_prob),
         )
         self.fc1 = nn.Linear(self.rnn_size, config.vocab_size)
 
@@ -29,8 +37,6 @@ class CharRNNModel(nn.Module):
             [batch_size, seq_length, embedding_dim]
         However, PyTorch RNN cells work with the following convention:
             [seq_length, batch_size, embedding_dim]
-
-
 
         Because of that, as well as other PyTorch-specific dimension
         requirements, I'll do some dimension-hacking within the model.
@@ -53,16 +59,9 @@ class CharRNNModel(nn.Module):
             lstm_out.view(lstm_out.size(0) * lstm_out.size(1), lstm_out.size(2))
         ).view(lstm_out.size(0), lstm_out.size(1), self.fc1.out_features)
 
-        # Apply Log-Softmax. We temporarily switch the embedding dimension
-        # first:
-        #    [num_chars, seq_length, batch_size]
-        # This is because Softmax normalizes over the possible characters,
-        # so it needs to be the first dimension.
-        log_softmax_output = \
-            F.log_softmax(output.permute(2, 1, 0)).permute(2, 1, 0)
-
+        # Switch to back to [batch_size, seq_length, embedding_dim]
         return (
-            log_softmax_output.permute(1, 0, 2),
+            output.permute(1, 0, 2),
             hidden,
         )
 
@@ -70,11 +69,16 @@ class CharRNNModel(nn.Module):
         """Initialize hidden weights"""
         # LSTMs require two sets of hidden states
         weight = next(self.parameters()).data
-        return (
-            Variable(
-                weight.new(self.num_layers, batch_size, self.rnn_size).zero_()
-            ),
-            Variable(
+
+        h = Variable(
+            weight.new(self.num_layers, batch_size, self.rnn_size).zero_()
+        )
+        if self.rnn_model == "LSTM":
+            c = Variable(
                 weight.new(self.num_layers, batch_size, self.rnn_size).zero_()
             )
-        )
+            return h, c
+        elif self.rnn_model == "GRU":
+            return h
+        else:
+            raise KeyError(self.rnn_model)

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import config as char_rnn_config
 import train as char_rnn_train
 import sample as char_rnn_sample
@@ -7,6 +8,7 @@ config = char_rnn_config.Config(
     data_dir="data/tinyshakespeare",
     save_dir=None,
     rnn_size=128,
+    rnn_model="LSTM",
     num_layers=2,
     batch_size=64,
     seq_length=50,
@@ -20,8 +22,8 @@ config = char_rnn_config.Config(
 
 dataset, model, losses = char_rnn_train.train_model(config)
 
-print char_rnn_sample.sample_model(
+print(char_rnn_sample.sample_model(
     config=config,
     dataset=dataset,
     model=model,
-)
+))
