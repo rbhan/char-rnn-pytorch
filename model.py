@@ -27,6 +27,7 @@ class CharRNNModel(nn.Module):
             self.rnn_size,
             self.rnn_size,
             self.num_layers,
+            batch_first=True,
             dropout=(1 - config.keep_prob),
         )
         self.fc1 = nn.Linear(self.rnn_size, config.vocab_size)
@@ -34,17 +35,8 @@ class CharRNNModel(nn.Module):
     def forward(self, x, hidden):
         """
         Inputs come in with dimensions (from data loaders):
-            [batch_size, seq_length, embedding_dim]
-        However, PyTorch RNN cells work with the following convention:
-            [seq_length, batch_size, embedding_dim]
-
-        Because of that, as well as other PyTorch-specific dimension
-        requirements, I'll do some dimension-hacking within the model.
-        Would be nice to find better solutions for these
+            [batch_size, seq_length]
         """
-
-        # Switch to [seq_length, batch_size, embedding_dim]
-        x = x.permute(1, 0)
 
         # Embed
         embedded = self.embedding(x)
@@ -52,16 +44,11 @@ class CharRNNModel(nn.Module):
         # Push through RNN
         lstm_out, hidden = self.rnn(embedded)
 
-        # Apply Fully-Connected layer. We temporarily compress to dim:
-        #    [seq_length * batch_size, embedding_dim]
-        # to apply FC1
-        output = self.fc1(
-            lstm_out.view(lstm_out.size(0) * lstm_out.size(1), lstm_out.size(2))
-        ).view(lstm_out.size(0), lstm_out.size(1), self.fc1.out_features)
+        # Apply Linear layer
+        output = self.fc1(lstm_out)
 
-        # Switch to back to [batch_size, seq_length, embedding_dim]
         return (
-            output.permute(1, 0, 2),
+            output,
             hidden,
         )
 

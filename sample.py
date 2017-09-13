@@ -11,7 +11,7 @@ def sample_model(config, dataset, model,
 
     # Convert prime_text to array
     prime = np.array(
-        map(dataset.char_to_int_map.get, prime_text)
+        list(map(dataset.char_to_int_map.get, prime_text))
     ).reshape(1, -1)
 
     # Initialize state for generation

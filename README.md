@@ -7,7 +7,7 @@ Originally inspired by Andrej Karpathy's [char-rnn](https://github.com/karpathy/
 
 
 ## Requirements
-- [PyTorch 0.1.2](http://pytorch.org/)
+- [PyTorch 0.2.0](http://pytorch.org/)
 
 
 ## Roadmap

@@ -11,7 +11,7 @@ class CharRNNDataset(torch.utils.data.Dataset):
         self.char_to_int_map = dict(zip(self.char_ls, range(len(self.char_ls))))
         self.int_to_char_map = dict(zip(range(len(self.char_ls)), self.char_ls))
 
-        full_data = np.array(map(self.char_to_int_map.get, text))
+        full_data = np.array(list(map(self.char_to_int_map.get, text)))
 
         # Truncate slightly so we have a num_chars = num_lines * seq_length
         self.num_lines = int(len(full_data) / config.seq_length)

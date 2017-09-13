@@ -13,10 +13,11 @@ config = char_rnn_config.Config(
     batch_size=64,
     seq_length=50,
     num_epochs=50,
+    save_every=False,
     grad_clip=5.,
     learning_rate=0.002,
     decay_rate=0.97,
-    input_keep_prob=1.0,
+    keep_prob=1.0,
     sampling_mode="weighted",
 )
 
