@@ -7,6 +7,7 @@ Originally inspired by Andrej Karpathy's [char-rnn](https://github.com/karpathy/
 
 
 ## Requirements
+- Python 3.6 (Might still run in 2.7)
 - [PyTorch 0.2.0](http://pytorch.org/)
 
 
