@@ -1,6 +1,5 @@
 import numpy as np
 import torch
-from torch.autograd import Variable
 
 from utils import new_hidden, get_sampling_function, to_text, maybe_cuda_var
 

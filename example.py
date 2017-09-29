@@ -4,7 +4,7 @@ import train as char_rnn_train
 import sample as char_rnn_sample
 
 config = char_rnn_config.Config(
-    cuda=True,
+    cuda=False,
     data_dir="data/tinyshakespeare",
     save_dir=None,
     rnn_size=128,

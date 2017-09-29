@@ -46,6 +46,6 @@ def load_data(config):
     config.vocab_size = dataset.vocab_size
     dataloader = torch.utils.data.DataLoader(
         dataset, batch_size=config.batch_size, shuffle=True,
-        num_workers=1, pin_memory=True,
+        num_workers=1, pin_memory=config.cuda,
     )
     return dataset, dataloader
