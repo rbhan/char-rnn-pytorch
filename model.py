@@ -39,7 +39,7 @@ class CharRNNModel(nn.Module):
         """
 
         # Embed
-        embedded = self.embedding(x)
+        embedded = self.embedding(x, hidden)
 
         # Push through RNN
         lstm_out, hidden = self.rnn(embedded)
