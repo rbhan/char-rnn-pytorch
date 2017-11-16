@@ -39,10 +39,10 @@ class CharRNNModel(nn.Module):
         """
 
         # Embed
-        embedded = self.embedding(x, hidden)
+        embedded = self.embedding(x)
 
         # Push through RNN
-        lstm_out, hidden = self.rnn(embedded)
+        lstm_out, hidden = self.rnn(embedded, hidden)
 
         # Apply Linear layer
         output = self.fc1(lstm_out)
